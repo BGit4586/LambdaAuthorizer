@@ -15,11 +15,10 @@ private AccessLevel accLevel;
     @Override
     public AuthPolicy handleRequest(TokenAuthorizerContext input, Context context) {
         context.getLogger().log("Input: " + input);
-        String principalId = "user124";
         
-        if (!validator.validate(input.getAuthorizationToken())) {
-        	throw new RuntimeException("Unauthorized");
-        }
+//        if (!validator.validate(input.getAuthorizationToken())) {
+//        	throw new RuntimeException("Unauthorized");
+//        }
         
         //Get Details from Token
         
@@ -30,7 +29,8 @@ private AccessLevel accLevel;
     	String[] apiGatewayArnPartials = arnPartials[5].split("/");
     	String restApiId = apiGatewayArnPartials[0];
     	String stage = apiGatewayArnPartials[1];
-    	//String httpMethod = apiGatewayArnPartials[2];
+    	String httpMethod = apiGatewayArnPartials[2];
+    	AuthPolicy.HttpMethod method = AuthPolicy.HttpMethod.valueOf(httpMethod);
     	String resource = ""; // root resource
     	if (apiGatewayArnPartials.length == 4) {
     		resource = apiGatewayArnPartials[3];
@@ -39,15 +39,21 @@ private AccessLevel accLevel;
         //Now, if the token is valid we have to find out what is the policy that is 
         //associated with the given IAM user,xxx;
          //This policy can come from Db or be generated dynamically
-        accLevel = getAccessLevel(principalId);
-        if (accLevel.equals(AccessLevel.ALLOWALL)) {
-        	return new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getAllowAllPolicy(region, awsAccountId, restApiId, stage));
-        }
-        else 
-        	return 	new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getDenyAllPolicy(region, awsAccountId, restApiId, stage));
+//        accLevel = getAccessLevel(principalId);
+//        if (accLevel.equals(AccessLevel.ALLOWALL)) {
+//        	return new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getAllowAllPolicy(region, awsAccountId, restApiId, stage));
+//        }
+//        else 
+//        	return 	new AuthPolicy(principalId, AuthPolicy.PolicyDocument.getDenyAllPolicy(region, awsAccountId, restApiId, stage));
 
         // TODO: implement your handler
        // return "Hello from Lambda!";
+    	
+    	if (input.getAuthorizationToken().equalsIgnoreCase("allow")) {
+    		//generate Allow policy for this method
+    		return new 	 AuthPolicy(awsAccountId, AuthPolicy.PolicyDocument.getAllowOnePolicy(region, awsAccountId, restApiId, stage, method, resource));
+    	}
+    	return 	new AuthPolicy(awsAccountId, AuthPolicy.PolicyDocument.getDenyOnePolicy(region, awsAccountId, restApiId, stage, method, resource));	
     }
     
     public AccessLevel getAccessLevel(String principal) {
