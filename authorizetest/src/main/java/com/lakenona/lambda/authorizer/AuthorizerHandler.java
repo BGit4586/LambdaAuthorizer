@@ -20,7 +20,7 @@ private AccessLevel accLevel;
 //        	throw new RuntimeException("Unauthorized");
 //        }
         
-        //Get Details from Token
+        
         
         String methodArn = input.getMethodArn();
     	String[] arnPartials = methodArn.split(":");
